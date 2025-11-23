@@ -3,36 +3,43 @@ import * as sim from "lib-simulation-wasm";
 
 // ----------------- Interface Definitions -----------------------
 interface AgentJs {
-    x: number;
-    y: number;
+    x: number;          // 0.0 <-> 1.1
+    y: number;          // 0.0 <-> 1.1
+    rotation: number;   // Radians
 }
 // ---------------------------------------------------------------
 
+
 // ---------------------- Drawing --------------------------------
-function drawagent(
+function drawAgent(
     ctx: CanvasRenderingContext2D,
     width: number,
     height: number,
     agent: AgentJs
 ) {
+    const size = 12;
+    const padding = 20;
+    const x = padding + agent.x * (width - padding * 2);
+    const y = padding + agent.y * (height - padding * 2);
 
-    const size = 20;
-    const x = agent.x * (width - size);
-    const y = agent.y * (height - size);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(agent.rotation);
 
     ctx.beginPath();
     // Nose (pointing up)
-    ctx.moveTo(x, y - size);
+    ctx.moveTo(0, -size);
     // Bottom Right
-    ctx.lineTo(x + size, y + size);
+    ctx.lineTo(size, size);
     // Rear center (indentation)
-    ctx.lineTo(x, y + size * 0.5);
+    ctx.lineTo(0, size * 0.5);
     // Bottom Left
-    ctx.lineTo(x - size, y + size);
+    ctx.lineTo(-size, size);
     ctx.closePath();
 
-    ctx.fillStyle = '#bb2a2f';
+    ctx.fillStyle = '#BB2A2F';
     ctx.fill();
+    ctx.restore();
 }
 // ---------------------------------------------------------------
 
@@ -71,6 +78,9 @@ function App() {
 
         // Animate the canvas
         const render = () => {
+            // Small step for agent, huge step for Agent Kind!
+            simulation.step()
+
             // Get the latest world state from Rust
             const world = simulation.world();
             const agents = world.agents;
@@ -81,7 +91,7 @@ function App() {
 
             // Draw agents
             for (const agent of agents as unknown as AgentJs[]) {
-                drawagent(ctx, width, height, agent);
+                drawAgent(ctx, width, height, agent);
             }
 
             // Loop

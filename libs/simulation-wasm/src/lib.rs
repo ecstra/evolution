@@ -21,6 +21,7 @@ pub struct World {
 pub struct Agent {
     pub x: f32,
     pub y: f32,
+    pub rotation: f32,
 }
 // ---------------------------------------------------------------
 
@@ -38,10 +39,19 @@ impl From<&sim::World> for World {
 
 // ------------------ Agent Implementation  --------------------
 impl From<&sim::Agent> for Agent {
-    fn from(Agent: &sim::Agent) -> Self {
+    fn from(agent: &sim::Agent) -> Self {
+
+        let pos = agent.position();
+        let vel = agent.velocity();
+
+        // THE MATH: Calculate angle from velocity vector.
+        // atan2(y, x) returns the angle in radians
+        let rotation = vel.y.atan2(vel.x);
+
         Self {
-            x: Agent.position().x,
-            y: Agent.position().y,
+            x: pos.x,
+            y: pos.y,
+            rotation: rotation,
         }
     }
 }
@@ -61,6 +71,10 @@ impl Simulation {
 
     pub fn world(&self) -> World {
         World::from(self.sim.world())
+    }
+
+    pub fn step(&mut self) {
+        self.sim.step();
     }
 }
 // ---------------------------------------------------------------

@@ -7,11 +7,13 @@ use rand::{
 use std::{
     ops::Index,
 };
+
 // ----------------------- Definitions ---------------------------
 // Genetic Algorithm
-pub struct GeneticAlgorithm<S, C> {
+pub struct GeneticAlgorithm<S, C, M> {
     selection_method: S,
     crossover_method: C,
+    mutation_method: M
 }
 
 
@@ -22,6 +24,7 @@ pub struct Chromosome {
 }
 
 pub trait Individual {
+    fn create(chromosome: Chromosome) -> Self;
     fn fitness(&self) -> f32;
     fn chromosome(&self) -> &Chromosome;
 }
@@ -182,16 +185,18 @@ impl Chromosome {
 
 
 // --------------- Genetic Algorithm Implementation --------------
-impl<S, C> GeneticAlgorithm<S, C>
+impl<S, C, M> GeneticAlgorithm<S, C, M>
 where
     S: SelectionMethod,
-    C: CrossoverMethod
+    C: CrossoverMethod,
+    M: MutationMethod
 {
     
-    pub fn new(selection_method: S, crossover_method: C) -> Self {
+    pub fn new(selection_method: S, crossover_method: C, mutation_method: M) -> Self {
         Self { 
             selection_method,
             crossover_method,
+            mutation_method
         }
     }
 
@@ -212,8 +217,9 @@ where
             let mut child = self.crossover_method.crossover(rng, parent_a, parent_b);
 
             // TODO mutation
-            todo!()
+            self.mutation_method.mutate(rng, &mut child);
 
+            I::create(child)
         })
         .collect()
     }
@@ -232,25 +238,84 @@ mod tests {
     use std::collections::BTreeMap;
     use std::iter::FromIterator;
     
-    #[derive(Clone, Debug)]
-    struct TestIndividual {
-        fitness: f32,
+    #[derive(Clone, Debug, PartialEq)]
+    enum TestIndividual {
+        WithChromosome { chromosome: Chromosome },
+        WithFitness { fitness: f32 },
     }
 
     impl TestIndividual {
         fn new(fitness: f32) -> Self {
-            Self { fitness }
+            Self::WithFitness { fitness }
+        }
+    }
+
+    impl PartialEq for Chromosome {
+        fn eq(&self, other: &Self) -> bool {
+            approx::relative_eq!(self.genes.as_slice(), other.genes.as_slice())
         }
     }
 
     impl Individual for TestIndividual {
-        fn fitness(&self) -> f32 {
-            self.fitness
+        fn create(chromosome: Chromosome) -> Self {
+            Self::WithChromosome { chromosome }
         }
 
         fn chromosome(&self) -> &Chromosome {
-            panic!("not supported for TestIndividual")
+            match self {
+                Self::WithChromosome { chromosome } => chromosome,
+
+                Self::WithFitness { .. } => {
+                    panic!("not supported for TestIndividual::WithFitness")
+                }
+            }
         }
+
+        fn fitness(&self) -> f32 {
+            match self {
+                Self::WithChromosome { chromosome } => {
+                    chromosome.iter().sum()
+                }
+
+                Self::WithFitness { fitness } => *fitness,
+            }
+        }
+    }
+
+    #[test]
+    fn genetic_algorithm() {
+        fn individual(genes: &[f32]) -> TestIndividual {
+            TestIndividual::create(genes.iter().cloned().collect())
+        }
+
+        let mut rng = StdRng::seed_from_u64(42);
+
+        let ga = GeneticAlgorithm::new(
+            RankSelection,
+            UniformCrossover,
+            GaussianMutation::new(0.5, 0.5),
+        );
+
+        let mut population = vec![
+            individual(&[0.0, 0.0, 0.0]),
+            individual(&[1.0, 1.0, 1.0]),
+            individual(&[1.0, 2.0, 1.0]),
+            individual(&[1.0, 2.0, 4.0]),
+        ];
+
+
+        for _ in 0..10 {
+            population = ga.evolve(&mut rng, &population);
+        }
+
+        let expected_population = vec![
+            individual(&[1.9093989, 2.5592773, 4.7587504]),
+            individual(&[1.7548623, 2.5357468, 4.528109]),
+            individual(&[1.498456, 1.7593423, 4.110021]),
+            individual(&[2.0690544, 2.5357468, 4.528109]),
+        ];
+
+        assert_eq!(population, expected_population);
     }
 
     #[test]

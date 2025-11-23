@@ -37,8 +37,9 @@ function drawAgent(
     ctx.lineTo(-size, size);
     ctx.closePath();
 
-    ctx.fillStyle = '#BB2A2F';
-    ctx.fill();
+    ctx.strokeStyle = '#406661';
+    ctx.lineWidth = 2;
+    ctx.stroke();
     ctx.restore();
 }
 // ---------------------------------------------------------------
@@ -58,21 +59,29 @@ function App() {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Make canvas full screen
-        // And ensure it's crisp on HiDPI screens
-        const pixelRatio = window.devicePixelRatio || 1;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        const resizeCanvas = () => {
+            // Make canvas full screen
+            // And ensure it's crisp on HiDPI screens
+            const pixelRatio = window.devicePixelRatio || 1;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
 
-        canvas.width = width * pixelRatio;
-        canvas.height = height * pixelRatio;
+            canvas.width = width * pixelRatio;
+            canvas.height = height * pixelRatio;
 
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
 
-        ctx.scale(pixelRatio, pixelRatio);
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
+            ctx.scale(pixelRatio, pixelRatio);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+        };
+
+        // Initial resize
+        resizeCanvas();
+
+        // Resize listener
+        window.addEventListener('resize', resizeCanvas);
 
         let animationFrameId: number;
 
@@ -86,7 +95,10 @@ function App() {
             const agents = world.agents;
 
             // Clear canvas
-            ctx.fillStyle = '#1a1a2a'; // Dark background
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            ctx.fillStyle = '#F5F5F5'; // Light background
             ctx.fillRect(0, 0, width, height);
 
             // Draw agents
@@ -102,6 +114,7 @@ function App() {
         render();
 
         return () => {
+            window.removeEventListener('resize', resizeCanvas);
             cancelAnimationFrame(animationFrameId);
         };
     }, [simulation]);

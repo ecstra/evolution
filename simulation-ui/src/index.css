@@ -13,6 +13,12 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --color-1: #F5F5F5;
+  --color-2: #B9E937;
+  --color-3: #57D131;
+  --color-4: #406661;
+
 }
 
 a {

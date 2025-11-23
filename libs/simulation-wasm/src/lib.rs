@@ -30,7 +30,6 @@ pub struct Agent {
 impl From<&sim::World> for World {
     fn from(world: &sim::World) -> Self {
         let agents = world.agents().iter().map(Agent::from).collect();
-
         Self { agents }
     }
 }

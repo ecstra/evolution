@@ -5,9 +5,7 @@ use std::{
 
 use rand::{
     Rng,
-    RngCore,
-    SeedableRng,
-    rngs::StdRng
+    RngCore
 };
 
 // ------------------------- Error -------------------------------
@@ -24,7 +22,7 @@ impl fmt::Display for NNError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             NNError::MismatchedNeuronInputSize{recieved, expected} => {
-                write!(f, "Got {recieved} inputs, but {expected} inputs were expected.")
+                write!(f, "Input Size Mismatch! \n\rExpected: {expected} inputs. \n\rRecieved: {recieved} inputs. \n\r{expected} != {recieved}")
             }
         }
     }
@@ -70,16 +68,63 @@ impl Network {
             .fold(inputs, |inputs, layer| layer.propagate(inputs))
     }
 
-    pub fn random(layers: &[LayerTopology], seed: Option<u64>) -> Self {
-        let mut rng = match seed {
-            Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::from_os_rng(),
-        };
+    pub fn random(rng: &mut dyn RngCore, layers: &[LayerTopology]) -> Self {
+        let layers: Vec<Layer> = layers
+            .windows(2)
+            .map(|layers| Layer::random(rng, layers[0].neurons, layers[1].neurons))
+            .collect();
+
+        Self { layers }
+    }
+
+    pub fn weights(&self) -> Vec<f32> {
+        let mut weights = Vec::new();
+
+        for layer in &self.layers {
+            for neuron in &layer.neurons {
+                weights.push(neuron.bias);
+                weights.extend(&neuron.weights);
+            }
+        }
+
+        weights
+    }
+
+    pub fn from_weights(
+        layers: &[LayerTopology],
+        weights: impl IntoIterator<Item = f32>,
+    ) -> Self {
+        let mut weights = weights.into_iter();
 
         let layers = layers
             .windows(2)
-            .map(|layers| Layer::random(&mut rng, layers[0].neurons, layers[1].neurons))
+            .map(|adjacent_layers| {
+                let input_neurons = adjacent_layers[0].neurons;
+                let output_neurons = adjacent_layers[1].neurons;
+
+                let neurons = (0..output_neurons)
+                    .map(|_| {
+                        // We must pull exactly 1 bias + N weights
+                        let bias = weights.next().expect("not enough weights");
+                        
+                        let neuron_weights = (0..input_neurons)
+                            .map(|_| weights.next().expect("not enough weights"))
+                            .collect();
+
+                        Neuron {
+                            bias,
+                            weights: neuron_weights,
+                        }
+                    })
+                    .collect();
+
+                Layer { neurons }
+            })
             .collect();
+
+        if weights.next().is_some() {
+            panic!("got too many weights/genes for this network topology");
+        }
 
         Self { layers }
     }
@@ -92,7 +137,7 @@ impl Layer {
     fn propagate(&self, inputs: Vec<f32>) -> Vec<f32> {
         self.neurons
             .iter()
-            .map(|neuron| neuron.propagate(&inputs).unwrap())
+            .map(|neuron| neuron.propagate(&inputs))
             .collect()
     }
 
@@ -109,13 +154,13 @@ impl Layer {
 
 // ------------------ Neuron Implementation ----------------------
 impl Neuron {
-    fn propagate(&self, inputs: &[f32]) -> Result<f32, NNError> {
+    fn propagate(&self, inputs: &[f32]) -> f32 {
         // Mismatched input size?
+        // It's not recoverable, so just panic
         if inputs.len() != self.weights.len() {
-            return Err(
-                NNError::MismatchedNeuronInputSize { 
-                    recieved: inputs.len(), 
-                    expected: self.weights.len()
+            panic!("{}", NNError::MismatchedNeuronInputSize { 
+                recieved: inputs.len(), 
+                expected: self.weights.len()
             });
         }
         
@@ -130,7 +175,7 @@ impl Neuron {
         output += self.bias;
 
         // Return max of output, 0
-        Ok(output.max(0.0))
+        output.max(0.0)
     }
 
     fn random(rng: &mut dyn RngCore, input_size: usize) -> Self {
@@ -145,6 +190,8 @@ impl Neuron {
 }
 // ---------------------------------------------------------------
 
+
+// --------------------------- Tests -----------------------------
 #[cfg(test)]
 mod nn_tests {
     use super::*;
@@ -180,7 +227,7 @@ mod nn_tests {
         // = -4.5
         // max(-4.5, 0.0) = 0.0
         assert_relative_eq!(
-            neuron.propagate(&[-10.0, -10.0]).unwrap(),
+            neuron.propagate(&[-10.0, -10.0]),
             0.0,
         );
 
@@ -189,8 +236,20 @@ mod nn_tests {
         // = (-0.15)      + (0.8)       + 0.5
         // = 1.15
         assert_relative_eq!(
-            neuron.propagate(&[0.5, 1.0]).unwrap(),
+            neuron.propagate(&[0.5, 1.0]),
             1.15,
         );
     }
+
+    #[test]
+    #[should_panic(expected="Input Size Mismatch! \n\rExpected: 2 inputs. \n\rRecieved: 3 inputs. \n\r2 != 3")]
+    fn invalid_len() {
+        let neuron = Neuron {
+            bias: 0.5,
+            weights: vec![-0.3, 0.8],
+        };
+
+        neuron.propagate(&[1.0, 2.0, 3.0]);
+    }
 }
+// ---------------------------------------------------------------

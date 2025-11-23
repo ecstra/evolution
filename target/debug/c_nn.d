@@ -1,0 +1,1 @@
+C:\InfinityX\Automa\evolution\target\debug\c_nn.exe: C:\InfinityX\Automa\evolution\libs\genetic-algorithm\src\lib.rs C:\InfinityX\Automa\evolution\libs\neural-network\src\lib.rs C:\InfinityX\Automa\evolution\src\main.rs

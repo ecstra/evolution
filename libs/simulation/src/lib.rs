@@ -75,11 +75,14 @@ impl Input {
 // ------------------- World Implementation  ---------------------
 impl World {
     pub fn random(rng: &mut dyn RngCore) -> Self {
-        let agents = (0..40)
+        let num_agents = 20;
+        let num_inputs = 40;
+
+        let agents = (0..num_agents)
             .map(|_| Agent::random(rng))
             .collect();
 
-        let inputs = (0..60)
+        let inputs = (0..num_inputs)
             .map(|_| Input::random(rng))
             .collect();
 
@@ -109,7 +112,15 @@ impl Simulation {
         &self.world
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self, rng: &mut dyn RngCore) {
+        self.process_collisions(rng);
+        self.process_movements();
+    }
+
+    // Movement of the agents
+    // Just add their randomly generated velocity to themselves till they reach max velocity...
+    // Velocity control can be done later...
+    fn process_movements(&mut self) {
         for agent in &mut self.world.agents {
             agent.position += agent.velocity;
 
@@ -117,7 +128,19 @@ impl Simulation {
             agent.position.y = na::wrap(agent.position.y, 0.0, 1.0);
         }
     }
+
+    fn process_collisions(&mut self, rng: &mut dyn RngCore) {
+        for agent in &mut self.world.agents {
+            for input in &mut self.world.inputs {
+                let distance = na::distance(&agent.position, &input.position);
+                
+                // If they collide, don't remove but rather re-locate
+                // This prevents consumption and regneration logic
+                if distance <= 0.01 {
+                    input.position = rng.random();
+                }
+            }
+        }
+    }
 }
 // ---------------------------------------------------------------
-
-

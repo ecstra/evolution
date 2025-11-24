@@ -13,7 +13,10 @@ pub struct Simulation {
 #[derive(Clone, Debug)]
 pub struct World {
     #[wasm_bindgen(getter_with_clone)]
-    pub agents: Vec<Agent>
+    pub agents: Vec<Agent>,
+
+    #[wasm_bindgen(getter_with_clone)]
+    pub inputs: Vec<Input>
 }
 
 #[wasm_bindgen]
@@ -23,6 +26,13 @@ pub struct Agent {
     pub y: f32,
     pub rotation: f32,
 }
+
+#[wasm_bindgen]
+#[derive(Clone, Debug)]
+pub struct Input {
+    pub x: f32,
+    pub y: f32,
+}
 // ---------------------------------------------------------------
 
 
@@ -30,7 +40,9 @@ pub struct Agent {
 impl From<&sim::World> for World {
     fn from(world: &sim::World) -> Self {
         let agents = world.agents().iter().map(Agent::from).collect();
-        Self { agents }
+        let inputs = world.inputs().iter().map(Input::from).collect();
+
+        Self { agents, inputs }
     }
 }
 // ---------------------------------------------------------------
@@ -57,6 +69,19 @@ impl From<&sim::Agent> for Agent {
 // ---------------------------------------------------------------
 
 
+// ------------------- Input Implementation  ---------------------
+impl From<&sim::Input> for Input {
+    fn from(input: &sim::Input) -> Self {
+        
+        Self {
+            x: input.position().x,
+            y: input.position().y,
+        }
+    }
+}
+// ---------------------------------------------------------------
+
+
 // ---------------- Simulation Implementation  -------------------
 #[wasm_bindgen]
 impl Simulation {
@@ -73,7 +98,7 @@ impl Simulation {
     }
 
     pub fn step(&mut self) {
-        self.sim.step();
+        self.sim.step(&mut self.rng);
     }
 }
 // ---------------------------------------------------------------

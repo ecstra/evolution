@@ -7,6 +7,11 @@ interface AgentJs {
     y: number;          // 0.0 <-> 1.1
     rotation: number;   // Radians
 }
+
+interface InputJs {
+    x: number;          // 0.0 <-> 1.1
+    y: number;          // 0.0 <-> 1.1
+}
 // ---------------------------------------------------------------
 
 
@@ -41,6 +46,23 @@ function drawAgent(
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
+}
+
+function drawInput(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    input: InputJs
+) {
+    const size = 4;
+    const padding = 20;
+    const x = padding + input.x * (width - padding * 2);
+    const y = padding + input.y * (height - padding * 2);
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fillStyle = '#406661';
+    ctx.fill();
 }
 // ---------------------------------------------------------------
 
@@ -93,6 +115,7 @@ function App() {
             // Get the latest world state from Rust
             const world = simulation.world();
             const agents = world.agents;
+            const inputs = world.inputs;
 
             // Clear canvas
             const width = window.innerWidth;
@@ -100,6 +123,11 @@ function App() {
 
             ctx.fillStyle = '#F5F5F5'; // Light background
             ctx.fillRect(0, 0, width, height);
+
+            // Draw inputs
+            for (const input of inputs as unknown as InputJs[]) {
+                drawInput(ctx, width, height, input);
+            }
 
             // Draw agents
             for (const agent of agents as unknown as AgentJs[]) {

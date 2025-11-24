@@ -29,17 +29,16 @@ function drawAgent(
 
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(agent.rotation);
+
+    // Our physics is "Right" (X+), but our drawing is "Up" (Y-).
+    // To make "Up" look like "Right", we rotate +90 degrees (PI/2).
+    ctx.rotate(agent.rotation + Math.PI / 2); 
 
     ctx.beginPath();
-    // Nose (pointing up)
-    ctx.moveTo(0, -size);
-    // Bottom Right
-    ctx.lineTo(size, size);
-    // Rear center (indentation)
-    ctx.lineTo(0, size * 0.5);
-    // Bottom Left
-    ctx.lineTo(-size, size);
+    ctx.moveTo(0, -size);       // Nose (Points Up locally)
+    ctx.lineTo(size, size);     
+    ctx.lineTo(0, size * 0.5);  
+    ctx.lineTo(-size, size);    
     ctx.closePath();
 
     ctx.strokeStyle = '#406661';

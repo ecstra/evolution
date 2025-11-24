@@ -51,18 +51,10 @@ impl From<&sim::World> for World {
 // ------------------ Agent Implementation  --------------------
 impl From<&sim::Agent> for Agent {
     fn from(agent: &sim::Agent) -> Self {
-
-        let pos = agent.position();
-        let vel = agent.velocity();
-
-        // THE MATH: Calculate angle from velocity vector.
-        // atan2(y, x) returns the angle in radians
-        let rotation = vel.y.atan2(vel.x);
-
         Self {
-            x: pos.x,
-            y: pos.y,
-            rotation: rotation,
+            x: agent.position().x,
+            y: agent.position().y,
+            rotation: agent.rotation().angle(),
         }
     }
 }

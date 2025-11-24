@@ -6,38 +6,64 @@ use rand::{
 use std::f32::consts::FRAC_PI_2;
 
 use lib_neural_network as nn;
+use lib_genetic_algorithm as ga;
 
 mod agent;
 mod eye;
 mod input;
 mod world;
+mod brain;
 
 pub use crate::{
     agent::*, 
     eye::*, 
     input::*,
-    world::*
+    world::*,
+    brain::*
 };
 
-// ----------------------- Definitions ---------------------------
-#[derive(Debug)]
-pub struct Simulation {
-    world: World
-}
-
+// ------------------------- Constants ---------------------------
 const SPEED_MIN: f32 = 0.0001;
 const SPEED_MAX: f32 = 0.0005;
 const SPEED_ACCEL: f32 = 0.2;
 const ROTATION_ACCEL: f32 = FRAC_PI_2;
+const GENERATION_LENGTH: usize = 2500;
+// ---------------------------------------------------------------
+
+
+// ----------------------- Definitions ---------------------------
+#[derive(Debug)]
+pub struct Simulation {
+    world: World,
+    ga: ga::GeneticAlgorithm<ga::RankSelection, ga::UniformCrossover, ga::GaussianMutation>,
+    age: usize,
+}
 // ---------------------------------------------------------------
 
 
 // ---------------- Simulation Implementation  -------------------
 impl Simulation {
     pub fn random(rng: &mut dyn RngCore) -> Self {
-        Self {
-            world: World::random(rng)
-        }
+
+        let world = World::random(rng);
+
+        let ga = ga::GeneticAlgorithm::new(
+            ga::RankSelection,
+            ga::UniformCrossover,
+            ga::GaussianMutation::new(0.01, 0.3),
+            // ---------------------- ^--^ -^-^
+            // | Chosen with a bit of experimentation.
+            // |
+            // | Higher values can make the simulation more chaotic,
+            // | which - a bit counterintuitively - might allow for
+            // | it to discover *better* solutions; but the trade-off
+            // | is that higher values might also cause current, good
+            // | enough solutions to be discarded.
+            // | Source: https://pwy.io/posts/learning-to-fly-pt4/#huggin-n-evolvin
+            // ---
+        );
+
+        Self { world, ga, age: 0 }
     }
 
     pub fn world(&self) -> &World {
@@ -48,6 +74,43 @@ impl Simulation {
         self.process_brains();
         self.process_collisions(rng);
         self.process_movements();
+
+        self.age += 1;
+        if self.age > GENERATION_LENGTH {
+            self.evolve(rng);
+        }
+    }
+
+    fn evolve(&mut self, rng: &mut dyn RngCore) {
+        self.age = 0;
+
+        // Step 1: Prepare agents to be sent into the genetic algorithm
+        let current_population: Vec<_> = self
+            .world
+            .agents
+            .iter()
+            .map(AgentIndividual::from_agent)
+            .collect();
+
+        // Step 2: Evolve agents
+        let evolved_population = self.ga.evolve(
+            rng,
+            &current_population,
+        );
+
+        // Step 3: Bring agents back from the genetic algorithm
+        self.world.agents = evolved_population
+            .into_iter()
+            .map(|individual| individual.into_agent(rng))
+            .collect();
+
+        // // Step 4: Restart foods
+        // //
+        // // (this is not strictly necessary, but it allows to easily spot
+        // // when the evolution happens - so it's more of a UI thing.)
+        // for food in &mut self.world.inputs {
+        //     food.position = rng.random();
+        // }
     }
 
     // Movement of the agents
@@ -73,6 +136,7 @@ impl Simulation {
                 // If they collide, don't remove but rather re-locate
                 // This prevents consumption and regneration logic
                 if distance <= 0.01 {
+                    agent.satiation += 1; // Update agent
                     input.position = rng.random();
                 }
             }
@@ -87,7 +151,7 @@ impl Simulation {
                 &self.world.inputs,
             );
 
-            let response = agent.brain.propagate(vision);
+            let response = agent.brain.nn.propagate(vision);
 
             let speed = response[0].clamp(-SPEED_ACCEL, SPEED_ACCEL);
             let rotation = response[1].clamp(-ROTATION_ACCEL, ROTATION_ACCEL);

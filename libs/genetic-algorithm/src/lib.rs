@@ -10,6 +10,7 @@ use std::{
 
 // ----------------------- Definitions ---------------------------
 // Genetic Algorithm
+#[derive(Clone, Debug)]
 pub struct GeneticAlgorithm<S, C, M> {
     selection_method: S,
     crossover_method: C,
@@ -36,6 +37,8 @@ pub trait SelectionMethod {
     where
         I: Individual;
 }
+
+#[derive(Clone, Debug)]
 pub struct RankSelection;
 
 
@@ -48,6 +51,8 @@ pub trait CrossoverMethod {
         parent_b: &Chromosome,
     ) -> Chromosome;
 }
+
+#[derive(Clone, Debug)]
 pub struct UniformCrossover;
 
 
@@ -55,6 +60,8 @@ pub struct UniformCrossover;
 pub trait MutationMethod {
     fn mutate(&self, rng: &mut dyn RngCore, child: &mut Chromosome);
 }
+
+#[derive(Clone, Debug)]
 pub struct GaussianMutation {
     chance: f32,
     coeff: f32,

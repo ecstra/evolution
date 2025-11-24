@@ -1,14 +1,13 @@
-use nalgebra as na;
-use rand::{
-    Rng, 
-    RngCore
-};
+use crate::*;
 
 // ----------------------- Definitions ---------------------------
 #[derive(Debug)]
 pub struct Agent {
     pub(crate) position: na::Point2<f32>,
-    pub(crate) velocity: na::Vector2<f32>
+    pub(crate) speed: f32,
+    pub(crate) rotation: na::Rotation2<f32>,
+    pub(crate) eye: Eye,
+    pub(crate) brain: nn::Network,
 }
 // ---------------------------------------------------------------
 
@@ -19,24 +18,41 @@ impl Agent {
         // Generate random coordinates between 0.0 and 1.0
         let position = rng.random();
 
+        let speed = 0.002;
+        let rotation = rng.random();
+
         // Generate random velocity components between -0.5 and 0.5
         // so they can move up/down/left/right.
 
-        let speed_factor = 1e-3;
-        let velocity = na::Vector2::new(
-            rng.random_range(-0.5..0.5), 
-            rng.random_range(-0.5..0.5)
-        ) * speed_factor; // Scale down speed so they don't nyoom
+        let eye = Eye::default();
 
-        Self { position, velocity }
+        let brain = nn::Network::random(
+            rng,
+            &[
+                // Input Layer (Eyes are inputs)
+                nn::LayerTopology {
+                    neurons: eye.cells(),
+                },
+
+                // Hidden layer
+                nn::LayerTopology {
+                    neurons: 2 * eye.cells(),
+                },
+                
+                // Output layer: [0] = Thrust force, [1] = Steering force
+                nn::LayerTopology { neurons: 2 }
+            ],
+        );
+
+        Self { position, speed, rotation, eye, brain }
     }
 
     pub fn position(&self) -> na::Point2<f32> {
         self.position
     }
 
-    pub fn velocity(&self) -> na::Vector2<f32> {
-        self.velocity
+    pub fn rotation(&self) -> na::Rotation2<f32> {
+        self.rotation
     }
 }
 // ---------------------------------------------------------------

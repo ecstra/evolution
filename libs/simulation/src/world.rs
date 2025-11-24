@@ -1,11 +1,4 @@
-use rand::{
-    RngCore
-};
-
-use crate::{
-    agent::*,
-    input::*
-};
+use crate::*;
 
 // ----------------------- Definitions ---------------------------
 #[derive(Debug)]

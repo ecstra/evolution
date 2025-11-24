@@ -23,8 +23,8 @@ pub use crate::{
 };
 
 // ------------------------- Constants ---------------------------
-const SPEED_MIN: f32 = 0.0001;
-const SPEED_MAX: f32 = 0.0005;
+const SPEED_MIN: f32 = 0.001;
+const SPEED_MAX: f32 = 0.005;
 const SPEED_ACCEL: f32 = 0.2;
 const ROTATION_ACCEL: f32 = FRAC_PI_2;
 const GENERATION_LENGTH: usize = 2500;
@@ -70,18 +70,29 @@ impl Simulation {
         &self.world
     }
 
-    pub fn step(&mut self, rng: &mut dyn RngCore) {
+    pub fn step(&mut self, rng: &mut dyn RngCore) -> Option<ga::Statistics> {
         self.process_brains();
         self.process_collisions(rng);
         self.process_movements();
 
         self.age += 1;
+
         if self.age > GENERATION_LENGTH {
-            self.evolve(rng);
+            Some(self.evolve(rng))
+        } else {
+            None
         }
     }
 
-    fn evolve(&mut self, rng: &mut dyn RngCore) {
+    pub fn train(&mut self, rng: &mut dyn RngCore) -> ga::Statistics {
+        loop {
+            if let Some(summary) = self.step(rng) {
+                return summary;
+            }
+        }
+    }
+
+    fn evolve(&mut self, rng: &mut dyn RngCore) -> ga::Statistics {
         self.age = 0;
 
         // Step 1: Prepare agents to be sent into the genetic algorithm
@@ -93,10 +104,8 @@ impl Simulation {
             .collect();
 
         // Step 2: Evolve agents
-        let evolved_population = self.ga.evolve(
-            rng,
-            &current_population,
-        );
+        let (evolved_population, stats) = self.ga.evolve(rng, &current_population);
+
 
         // Step 3: Bring agents back from the genetic algorithm
         self.world.agents = evolved_population
@@ -104,13 +113,7 @@ impl Simulation {
             .map(|individual| individual.into_agent(rng))
             .collect();
 
-        // // Step 4: Restart foods
-        // //
-        // // (this is not strictly necessary, but it allows to easily spot
-        // // when the evolution happens - so it's more of a UI thing.)
-        // for food in &mut self.world.inputs {
-        //     food.position = rng.random();
-        // }
+        stats
     }
 
     // Movement of the agents

@@ -13,7 +13,7 @@ pub struct World {
 impl World {
     pub fn random(rng: &mut dyn RngCore) -> Self {
         let num_agents = 20;
-        let num_inputs = 40;
+        let num_inputs = 80;
 
         let agents = (0..num_agents)
             .map(|_| Agent::random(rng))

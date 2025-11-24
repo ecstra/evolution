@@ -92,5 +92,16 @@ impl Simulation {
     pub fn step(&mut self) {
         self.sim.step(&mut self.rng);
     }
+
+    pub fn complete_one_evolution(&mut self) -> String {
+        let stats = self.sim.train(&mut self.rng);
+
+        format!(
+            "min={:.2}, max={:.2}, avg={:.2}",
+            stats.min_fitness,
+            stats.max_fitness,
+            stats.avg_fitness,
+        )
+    }
 }
 // ---------------------------------------------------------------

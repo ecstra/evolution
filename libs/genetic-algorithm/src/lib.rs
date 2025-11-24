@@ -17,6 +17,12 @@ pub struct GeneticAlgorithm<S, C, M> {
     mutation_method: M
 }
 
+#[derive(Clone, Debug)]
+pub struct Statistics {
+    pub min_fitness: f32,
+    pub max_fitness: f32,
+    pub avg_fitness: f32,
+}
 
 // Individual
 #[derive(Clone, Debug)]
@@ -145,6 +151,36 @@ impl MutationMethod for GaussianMutation {
 // ---------------------------------------------------------------
 
 
+// ----------------- Statistics Impementation --------------------
+impl Statistics {
+    fn new<I>(population: &[I]) -> Self
+    where
+        I: Individual,
+    {
+        assert!(!population.is_empty());
+
+        let mut min_fitness = population[0].fitness();
+        let mut max_fitness = min_fitness;
+        let mut sum_fitness = 0.0;
+
+        for individual in population {
+            let fitness = individual.fitness();
+
+            min_fitness = min_fitness.min(fitness);
+            max_fitness = max_fitness.max(fitness);
+            sum_fitness += fitness;
+        }
+
+        Self {
+            min_fitness,
+            max_fitness,
+            avg_fitness: sum_fitness / (population.len() as f32),
+        }
+    }
+}
+// ---------------------------------------------------------------
+
+
 // ----------------- Chromosome Impementation --------------------
 // Just make chromosomes a vector 👍
 // Enable indexing for chromosomes
@@ -207,14 +243,14 @@ where
         }
     }
 
-    pub fn evolve<I>(&self, rng: &mut dyn RngCore, population: &[I]) -> Vec<I>
+    pub fn evolve<I>(&self, rng: &mut dyn RngCore, population: &[I]) -> (Vec<I>, Statistics)
     where
         I: Individual,
     {
         // if population is empty, who you gonna mutate?
         assert!(!population.is_empty());
 
-        (0..population.len())
+        let new_population = (0..population.len())
         .map(|_| {
             // 1. Selection
             let parent_a = self.selection_method.select(rng, population).chromosome();
@@ -228,7 +264,11 @@ where
 
             I::create(child)
         })
-        .collect()
+        .collect();
+    
+        let stats = Statistics::new(population);
+
+        (new_population, stats)
     }
 }
 // ---------------------------------------------------------------
@@ -312,7 +352,7 @@ mod tests {
 
 
         for _ in 0..10 {
-            population = ga.evolve(&mut rng, &population);
+            (population, _) = ga.evolve(&mut rng, &population);
         }
 
         let expected_population = vec![

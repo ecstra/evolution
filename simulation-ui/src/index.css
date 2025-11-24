@@ -21,6 +21,22 @@
 
 }
 
+g:focus, path:focus {
+  outline: none !important;
+}
+
+.recharts-wrapper {
+  outline: none !important;
+}
+
+.recharts-pie * {
+  outline: none !important;
+}
+
+.recharts-layer {
+  outline: none !important;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -36,6 +52,14 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+body:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
 }
 
 h1 {
@@ -54,6 +78,7 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }

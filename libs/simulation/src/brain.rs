@@ -37,10 +37,10 @@ impl Brain {
 
             // Hidden layer
             nn::LayerTopology {
-                neurons: 2 * eye.cells(),
+                neurons: 4 * eye.cells(),
             },
             
-            // Output layer: [0] = Thrust force, [1] = Steering force
+            // Output layer: Rotation + speed
             nn::LayerTopology { neurons: 2 }
         ]
     }

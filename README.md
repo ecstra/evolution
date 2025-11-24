@@ -1,4 +1,4 @@
-# Evolve
+# Evolution
 
 A biological evolution simulation built from scratch using  **Rust** ,  **WebAssembly** , and  **React** .
 

@@ -4,7 +4,7 @@ A biological evolution simulation built from scratch using  **Rust** ,  **WebAss
 
 This project simulates a population of autonomous agents that evolve over generations to survive. Each agent possesses a unique brain (Neural Network) and genome (Chromosome). Through the process of natural selection, agents that are better at finding food pass their genes to the next generation, resulting in emergent intelligent behavior.
 
-[**View Live Demo**]( "null")
+[**View Live Demo**](https://gilded-beignet-e84d24.netlify.app/ "null")
 
 ## Key Features
 
@@ -72,7 +72,7 @@ Handles the physics and world state.
 1. **Clone the repository**
 
    ```
-   git clone https://github.com/ecstra/evolve.git
+   git clone https://github.com/ecstra/evolution.git
    cd evolve
    ```
 2. **Build the WASM package**

@@ -5,7 +5,6 @@ import topLevelAwait from "vite-plugin-top-level-await";
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  base: '/evolve/',
   plugins: [
     react(),
     wasm(),

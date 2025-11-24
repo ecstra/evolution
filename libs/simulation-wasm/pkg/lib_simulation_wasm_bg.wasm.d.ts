@@ -1,0 +1,32 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_agent_free: (a: number, b: number) => void;
+export const __wbg_get_agent_rotation: (a: number) => number;
+export const __wbg_get_agent_x: (a: number) => number;
+export const __wbg_get_agent_y: (a: number) => number;
+export const __wbg_get_world_agents: (a: number) => [number, number];
+export const __wbg_get_world_inputs: (a: number) => [number, number];
+export const __wbg_input_free: (a: number, b: number) => void;
+export const __wbg_set_agent_rotation: (a: number, b: number) => void;
+export const __wbg_set_agent_x: (a: number, b: number) => void;
+export const __wbg_set_agent_y: (a: number, b: number) => void;
+export const __wbg_set_world_agents: (a: number, b: number, c: number) => void;
+export const __wbg_set_world_inputs: (a: number, b: number, c: number) => void;
+export const __wbg_simulation_free: (a: number, b: number) => void;
+export const __wbg_world_free: (a: number, b: number) => void;
+export const simulation_complete_one_evolution: (a: number) => [number, number];
+export const simulation_new: () => number;
+export const simulation_step: (a: number) => void;
+export const simulation_world: (a: number) => number;
+export const __wbg_set_input_x: (a: number, b: number) => void;
+export const __wbg_set_input_y: (a: number, b: number) => void;
+export const __wbg_get_input_x: (a: number) => number;
+export const __wbg_get_input_y: (a: number) => number;
+export const __wbindgen_exn_store: (a: number) => void;
+export const __externref_table_alloc: () => number;
+export const __wbindgen_externrefs: WebAssembly.Table;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const __externref_drop_slice: (a: number, b: number) => void;
+export const __wbindgen_malloc: (a: number, b: number) => number;
+export const __wbindgen_start: () => void;

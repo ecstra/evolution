@@ -4,6 +4,9 @@ A biological evolution simulation built from scratch using  **Rust** ,  **WebAss
 
 This project simulates a population of autonomous agents that evolve over generations to survive. Each agent possesses a unique brain (Neural Network) and genome (Chromosome). Through the process of natural selection, agents that are better at finding food pass their genes to the next generation, resulting in emergent intelligent behavior.
 
+
+![1763979314817](image/README/1763979314817.gif)
+
 [**View Live Demo**](https://gilded-beignet-e84d24.netlify.app/ "null")
 
 ## Key Features

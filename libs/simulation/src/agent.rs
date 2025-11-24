@@ -18,7 +18,7 @@ impl Agent {
         // Generate random coordinates between 0.0 and 1.0
         let position = rng.random();
 
-        let speed = 0.002;
+        let speed = 0.0002;
         let rotation = rng.random();
 
         // Generate random velocity components between -0.5 and 0.5

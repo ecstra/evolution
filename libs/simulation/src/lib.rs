@@ -55,8 +55,9 @@ impl Simulation {
     // Velocity control can be done later...
     fn process_movements(&mut self) {
         for agent in &mut self.world.agents {
-            // Add velocity to the position
-            agent.position += agent.rotation * na::Vector2::new(0.0, agent.speed);
+            // Move along X-axis (agent.speed, 0.0) instead of Y-axis (0.0, agent.speed)
+            // This aligns "Movement" with "0 radians" defined by the Eye.
+            agent.position += agent.rotation * na::Vector2::new(agent.speed, 0.0);
 
             // Clamp the position to be within 0 and 1
             agent.position.x = na::wrap(agent.position.x, 0.0, 1.0);
